@@ -10,7 +10,7 @@ class MyEntry(tk.Entry):
     def __init__(self, master=None, cnf={}, **kw):
         super().__init__(master, cnf, **kw)
 
-        if not "textvariable" in kw:
+        if "textvariable" not in kw:
             self.variable = tk.StringVar()
             self.config(textvariable=self.variable)
         else:
