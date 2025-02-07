@@ -22,6 +22,7 @@ A supercharged theme extension
 -----------------------------------
 
 * [ttkbootstrap](https://ttkbootstrap.readthedocs.io)
+* [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter)
 
 
 Co je třeba k psaní programů v TkInter
