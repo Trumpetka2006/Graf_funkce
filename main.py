@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 
-from os.path import basename, splitext
+from logging import warning
+import os
+from os.path import basename, exists, splitext
 from pydoc import importfile, text
+from textwrap import fill
 import tkinter as tk
 import matplotlib.pyplot as plt
 import numpy as np
 import re
 
-from tkinter import ttk, N, E, S, W, messagebox
+from tkinter import END, ttk, N, E, S, W, messagebox, filedialog
 
 
 class MyEntry(tk.Entry):
@@ -43,7 +46,7 @@ class About(tk.Toplevel):
 
 class Application(tk.Tk):
     name = basename(splitext(basename(__file__.capitalize()))[0])
-    name = "Foo"
+    name = "Graf funkce"
 
     def __init__(self):
         super().__init__(className=self.name)
@@ -51,6 +54,7 @@ class Application(tk.Tk):
         self.func = tk.StringVar()
         self.x_name = tk.Entry()
         self.y_name = tk.Entry()
+        self.file_path = tk.StringVar()
 
         self.val_f_tupple = (self.register(self.validate), "%P")
 
@@ -81,11 +85,15 @@ class Application(tk.Tk):
         self.func_frame.grid()
 
         self.file_frame = tk.LabelFrame(self, text="Graf ze souboru")
-        self.file_name = tk.Entry(self.file_frame)
-        self.file_select = tk.Button(self.file_frame, text="Vybrat soubor")
+        self.file_name = tk.Entry(
+            self.file_frame, state="readonly", textvariable=self.file_path
+        )
+        self.file_select = tk.Button(
+            self.file_frame, text="Vybrat soubor", command=self.open_file
+        )
 
-        self.file_name.grid(sticky=E + W)
-        self.file_select.grid(row=1, sticky=E + W)
+        self.file_name.pack(fill="x")
+        self.file_select.pack(fill="x")
         self.file_frame.grid(row=1, sticky=E + W)
 
         self._axes().grid(row=2, column=0, sticky=E + W)
@@ -97,7 +105,9 @@ class Application(tk.Tk):
         draw_func = tk.Button(
             draw_frame, text="Vykreslit z funkce", command=self.func_calc
         )
-        draw_file = tk.Button(draw_frame, text="Vykreslit ze souboru")
+        draw_file = tk.Button(
+            draw_frame, text="Vykreslit ze souboru", command=self.file_calc
+        )
 
         draw_func.grid(sticky=W + E)
         draw_file.grid(row=1, sticky=W + E)
@@ -116,6 +126,15 @@ class Application(tk.Tk):
         self.y_name.grid(row=1, column=1)
         return axes_frame
 
+    def name_axes(self):
+        plt.xlabel("Osa X")
+        plt.ylabel("Osa Y")
+
+        if self.x_name.get() != "":
+            plt.xlabel(self.x_name.get())
+        if self.y_name.get() != "":
+            plt.ylabel(self.y_name.get())
+
     def func_calc(self):
         funcs = {"sin": np.sin, "log": np.log, "exp": np.exp}
         try:
@@ -130,12 +149,36 @@ class Application(tk.Tk):
         if self.func.get() not in ["sin", "log", "exp"]:
             self.warning("Nebyla vybrána funkce")
             return
-        print("succes")
         x = np.linspace(start, end, 200)
         y = funcs[self.func.get()](x)
 
         fig, ax = plt.subplots()
         ax.plot(x, y)
+        self.name_axes()
+        plt.show()
+
+    def file_calc(self):
+        if not exists(self.file_path.get()):
+            warning("Soubor neexistuje")
+            return
+        x = []
+        y = []
+        with open(self.file_path.get(), "r") as file:
+            while True:
+                line = file.readline()
+                if line == "":
+                    break
+                num = line.split()
+                try:
+                    x.append(float(num[0]))
+                    y.append(float(num[1]))
+                except ValueError:
+                    warning("Neznámý formát souboru!")
+                    return
+            file.close()
+        fig, ax = plt.subplots()
+        ax.plot(x, y)
+        self.name_axes()
         plt.show()
 
     def validate(self, P: str):
@@ -144,6 +187,9 @@ class Application(tk.Tk):
     def warning(self, message: str):
         messagebox.showerror(title="Chyba!", message=message)
 
+    def open_file(self):
+        self.file_path.set(filedialog.askopenfilename())
+
     def about(self):
         window = About(self)
         window.grab_set()
@@ -151,13 +197,6 @@ class Application(tk.Tk):
     def quit(self, event=None):
         super().quit()
 
-
-x = np.linspace(0, 2 * np.pi, 200)
-y = np.sin(x)
-
-fig, ax = plt.subplots()
-ax.plot(x, y)
-plt.show()
 
 app = Application()
 app.mainloop()
