@@ -159,7 +159,7 @@ class Application(tk.Tk):
 
     def file_calc(self):
         if not exists(self.file_path.get()):
-            warning("Soubor neexistuje")
+            self.warning("Soubor neexistuje")
             return
         x = []
         y = []
@@ -173,7 +173,7 @@ class Application(tk.Tk):
                     x.append(float(num[0]))
                     y.append(float(num[1]))
                 except ValueError:
-                    warning("Neznámý formát souboru!")
+                    self.warning("Neznámý formát souboru!")
                     return
             file.close()
         fig, ax = plt.subplots()
