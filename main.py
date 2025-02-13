@@ -14,14 +14,34 @@ from tkinter import END, ttk, N, E, S, W, messagebox, filedialog
 
 
 class MyEntry(tk.Entry):
-    def __init__(self, master=None, cnf={}, **kw):
+    def __init__(self, master=None, placeholder="", cnf={}, **kw):
         super().__init__(master, cnf, **kw)
+
+        self.placeholder = placeholder
+        self.placeholder_color = "gray"
+        self.normal_color = self["fg"]
+
+        self.bind("<FocusIn>", self._on_focus_in)
+        self.bind("<FocusOut>", self._on_focus_out)
+
+        self._on_focus_out()
+        self.configure(fg=self.placeholder_color)
 
         if "textvariable" not in kw:
             self.variable = tk.StringVar()
             self.config(textvariable=self.variable)
         else:
             self.variable = kw["textvariable"]
+
+    def _on_focus_out(self, event=None):
+        if not self.get():
+            self.insert(0, self.placeholder)
+            self.config(fg=self.placeholder_color)
+
+    def _on_focus_in(self, event=None):
+        if self.get() == self.placeholder:
+            self.delete(0, END)
+            self.configure(fg=self.normal_color)
 
     @property
     def value(self):
@@ -56,6 +76,9 @@ class Application(tk.Tk):
         self.y_name = tk.Entry()
         self.file_path = tk.StringVar()
 
+        self.plot_start = tk.StringVar(value="START")
+        self.plot_end = tk.StringVar(value="END")
+
         self.val_f_tupple = (self.register(self.validate), "%P")
 
         self.title(self.name)
@@ -71,10 +94,18 @@ class Application(tk.Tk):
             self.func_frame, text="exp", variable=self.func, value="exp"
         )
         self.start = MyEntry(
-            self.func_frame, validate="all", validatecommand=self.val_f_tupple
+            self.func_frame,
+            validate="all",
+            validatecommand=self.val_f_tupple,
+            textvariable=self.plot_start,
+            placeholder="START",
         )
         self.end = MyEntry(
-            self.func_frame, validate="all", validatecommand=self.val_f_tupple
+            self.func_frame,
+            validate="all",
+            validatecommand=self.val_f_tupple,
+            textvariable=self.plot_end,
+            placeholder="END",
         )
 
         self.sin.grid(row=0)
